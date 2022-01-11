@@ -5,6 +5,7 @@ import * as React from 'react';
 import Box from '@mui/material/Box';
 import Modal from '@mui/material/Modal';
 import SignUp from './SignUp'
+import Update from './Update'
 import './modal.css'
 import CloseIcon from '@mui/icons-material/Close';
 import {useEffect, useState} from "react";
@@ -19,7 +20,7 @@ const columns = [
 
 const List = () => {
     const [people, setPeople] = useState([])
-    const [selectedPerson, setSelectedPerson] = useState('')
+    const [selectedPerson, setSelectedPerson] = useState(null)
 
     // get all people from server
     useEffect(() => {
@@ -42,6 +43,7 @@ const List = () => {
         console.log(res)
         if (res.status === 200) {
             setPeople(people.filter((person) => person.id !== id))
+            window.location.reload(false);
         } else
             alert('Error deleting person')
 
@@ -65,23 +67,38 @@ const List = () => {
         const data = res.json()
         console.log(data)
         setPeople([...people, data]) // sets data instead of people
+        window.location.reload(false);
     }
+    // update person
+    const updatePerson = async (person) => {
+
+    }
+    const saveSelectedPerson = (person) => {
+
+    }
+
     // modal open or close
     const [open, setOpen] = React.useState(false);
     // modal passed data
     const [modalData, setModalData] = React.useState(null);
-    const handleOpen = (modalType) => {
+    const handleOpen = (modalType, person) => {
         setOpen(true);
         if(modalType === 'create') {
             setModalData(<SignUp onAdd={addPerson}/>)
         }
-        if(modalType === 'delete') {
-            setModalData(<></>)
+        if(modalType === 'update') {
+
+            console.log(person)
+            setModalData(<Update onUpdate={updatePerson} currentPerson={person} person='person'/>)
         }
     }
     const handleClose = () => setOpen(false);
 
-
+    const func = (person) => {
+        console.log('person ', person)
+        setSelectedPerson(person)
+        console.log(selectedPerson)
+    }
     return(
         <div className="SignUpForm">
             <Container maxWidth="lg">
@@ -92,9 +109,13 @@ const List = () => {
                         columns={columns}
                         pageSize={5}
                         rowsPerPageOptions={[5]}
+                        onCellClick={person => {
+                            func(person)
+                            handleOpen('update', person)
+                        }}
                         checkboxSelection
-                        onSelectionModelChange={itm => {
-                            setSelectedPerson(itm)
+                        onSelectionModelChange={person => {
+                            setSelectedPerson(person)
                         }}
                     />
                 </div>
