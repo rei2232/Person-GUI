@@ -1,78 +1,122 @@
-
 import Container from '@mui/material/Container';
 import { DataGrid } from '@mui/x-data-grid';
 import Button from '@mui/material/Button';
 import * as React from 'react';
-import {Component} from "react";
-import Modal from "./Modal"
-import SignUp from "./SignUp"
+import Box from '@mui/material/Box';
+import Modal from '@mui/material/Modal';
+import SignUp from './SignUp'
+import './modal.css'
+import CloseIcon from '@mui/icons-material/Close';
+import {useEffect, useState} from "react";
+
 const columns = [
-    { field: 'id', headerName: 'ID', width: 70 },
+    { field: 'id', headerName: 'ID', width: 200 },
     { field: 'name', headerName: 'Name', width: 130 },
     { field: 'ssn', headerName: 'SSN', width: 130 },
     { field: 'age', headerName: 'Age', type: 'number', width: 130 },
     { field: 'salary', headerName: 'Salary', type: 'number', width: 130 },
-
-    // {
-    //     field: 'fullName',
-    //     headerName: 'Full name',
-    //     description: 'This column has a value getter and is not sortable.',
-    //     sortable: false,
-    //     width: 160,
-    //     valueGetter: (params) =>
-    //         `${params.getValue(params.id, 'firstName') || ''} ${
-    //             params.getValue(params.id, 'lastName') || ''
-    //         }`,
-    // },
 ];
 
-const rows = [
+const List = () => {
+    const [people, setPeople] = useState([])
+    const [selectedPerson, setSelectedPerson] = useState('')
 
-];
+    // get all people from server
+    useEffect(() => {
+        const getPeople = async () => {
+            const peopleFromServer = await fetchPeople()
+            setPeople(peopleFromServer)
+        }
+        getPeople()
+    }, [])
+    // delete person from server
+    const deletePeople = async (id) => {
+        const URL = '/api/' + decodeURI(id)
+        const res = await fetch(URL, {
+            method: 'DELETE',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            }
+        })
+        console.log(res)
+        if (res.status === 200) {
+            setPeople(people.filter((person) => person.id !== id))
+        } else
+            alert('Error deleting person')
 
-
-export default class List extends Component{
-    constructor() {
-        super();
-        this.state = {
-            show: false
-        };
-        this.showModal = this.showModal.bind(this);
-        this.hideModal = this.hideModal.bind(this);
     }
-
-    showModal = () => {
-        this.setState({ show: true });
-    };
-
-    hideModal = () => {
-        this.setState({ show: false });
-    };
-    render() {
-        return (
-            <div className="SignUpForm">
-                <Container maxWidth="lg">
-                    <h1 style={{color: '0074FF'}}>Person Database</h1>
-                    <div style={{height: 400, width: '100%'}}>
-                        <DataGrid
-                            rows={rows}
-                            columns={columns}
-                            pageSize={5}
-                            rowsPerPageOptions={[5]}
-                            checkboxSelection
-                        />
-                    </div>
-                    <div className="btn-group">
-                        <Modal show={this.state.show} handleClose={this.hideModal} class={'SignUp'}>
-
-                        </Modal>
-                        <Button variant="outlined" onClick={this.showModal} >Add new person</Button>
-                        <Button variant="contained" style={{background: '#FF2D00'}}>Delete</Button>
-                        <Button variant="outlined">Edit</Button>
-                    </div>
-                </Container>
-            </div>
-        );
+    // fetch data
+    const fetchPeople = async () => {
+        const res = await fetch('/api')
+        const data = await res.json()
+        return data
     }
+    // add person to server
+    const addPerson = async (person) => {
+        const res = await fetch ('/api', {
+            method: 'POST',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(person)
+        })
+        const data = res.json()
+        console.log(data)
+        setPeople([...people, data]) // sets data instead of people
+    }
+    // modal open or close
+    const [open, setOpen] = React.useState(false);
+    // modal passed data
+    const [modalData, setModalData] = React.useState(null);
+    const handleOpen = (modalType) => {
+        setOpen(true);
+        if(modalType === 'create') {
+            setModalData(<SignUp onAdd={addPerson}/>)
+        }
+        if(modalType === 'delete') {
+            setModalData(<></>)
+        }
+    }
+    const handleClose = () => setOpen(false);
 
+
+    return(
+        <div className="SignUpForm">
+            <Container maxWidth="lg">
+                <h1 style={{color: '0074FF'}}>Person Database</h1>
+                <div style={{height: 400, width: '100%'}}>
+                    <DataGrid
+                        rows={people}
+                        columns={columns}
+                        pageSize={5}
+                        rowsPerPageOptions={[5]}
+                        checkboxSelection
+                        onSelectionModelChange={itm => {
+                            setSelectedPerson(itm)
+                        }}
+                    />
+                </div>
+                <div className="btn-group">
+                    <Button variant="outlined" onClick={() => handleOpen('create')}>Add new person</Button>
+                    <Button variant="contained" style={{background: '#FF2D00'}} onClick={() => deletePeople(selectedPerson)}>Delete</Button>
+                    <Modal
+                        open={open}
+                        onClose={handleClose}
+                        aria-labelledby="modal-modal-title"
+                        aria-describedby="modal-modal-description"
+                    >
+                        <Box sx className="modalBox">
+                            <CloseIcon className="close-icon" onClick={handleClose}/>
+                            {modalData}
+                        </Box>
+
+                    </Modal>
+                </div>
+            </Container>
+        </div>
+
+    )
 }
+export default List
