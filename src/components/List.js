@@ -20,7 +20,7 @@ const columns = [
 
 const List = () => {
     const [people, setPeople] = useState([])
-    const [selectedPerson, setSelectedPerson] = useState(null)
+    const [selectedPerson, setSelectedPerson] = useState([])
 
     // get all people from server
     useEffect(() => {
@@ -65,16 +65,27 @@ const List = () => {
             body: JSON.stringify(person)
         })
         const data = res.json()
-        console.log(data)
         setPeople([...people, data]) // sets data instead of people
         window.location.reload(false);
     }
     // update person
-    const updatePerson = async (person) => {
-
+    const updatePerson = async (person,id) => {
+        const URL = '/api/' + decodeURI(id)
+        const res = await fetch (URL, {
+            method: 'PUT',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(person)
+        })
+        const data = res.json()
+        console.log(res)
+        setPeople([...people, data]) // sets data instead of people
+        window.location.reload(false);
     }
     const saveSelectedPerson = (person) => {
-
+        handleOpen("update",person)
     }
 
     // modal open or close
@@ -87,18 +98,12 @@ const List = () => {
             setModalData(<SignUp onAdd={addPerson}/>)
         }
         if(modalType === 'update') {
-
-            console.log(person)
-            setModalData(<Update onUpdate={updatePerson} currentPerson={person} person='person'/>)
+            setModalData(<Update onUpdate={updatePerson} person={person}/>)
         }
     }
     const handleClose = () => setOpen(false);
 
-    const func = (person) => {
-        console.log('person ', person)
-        setSelectedPerson(person)
-        console.log(selectedPerson)
-    }
+
     return(
         <div className="SignUpForm">
             <Container maxWidth="lg">
@@ -110,8 +115,7 @@ const List = () => {
                         pageSize={5}
                         rowsPerPageOptions={[5]}
                         onCellClick={person => {
-                            func(person)
-                            handleOpen('update', person)
+                            saveSelectedPerson(person)
                         }}
                         checkboxSelection
                         onSelectionModelChange={person => {

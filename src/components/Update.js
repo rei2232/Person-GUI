@@ -3,11 +3,11 @@ import {TextField} from "@mui/material";
 import "./signup.css"
 import Button from "@mui/material/Button";
 import {useState} from "react";
-const Update = ({onUpdate}, {CurrentPerson}, person) => {
-    const [name, setName] = useState('')
-    const [ssn, setSsn] = useState('')
-    const [age, setAge] = useState('')
-    const [salary, setSalary] = useState('')
+const Update = (props) => {
+    const [name, setName] = useState(props.person.row.name)
+    const [ssn, setSsn] = useState(props.person.row.ssn)
+    const [age, setAge] = useState(props.person.row.age)
+    const [salary, setSalary] = useState(props.person.row.salary)
     const onSubmit = (e) => {
         e.preventDefault()
 
@@ -27,7 +27,7 @@ const Update = ({onUpdate}, {CurrentPerson}, person) => {
             alert('Please add a salary')
             return
         }
-        onUpdate({name,ssn,age,salary})
+        props.onUpdate({name,ssn,age,salary},props.person.row.id)
 
         setName('')
         setAge('')
@@ -35,7 +35,8 @@ const Update = ({onUpdate}, {CurrentPerson}, person) => {
         setSalary('')
 
     }
-    console.log("actual: ",person)
+    // console.log(props.person.row.name)
+    // setName(props.person.row.name)
     return(
         <div className="signup-container">
             <h1 style={{color: '#2980b9'}}>Update Person</h1>
